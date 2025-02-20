@@ -1,0 +1,19 @@
+{
+  "name": "OCaml Dev Container",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "features": {},
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ocamllabs.ocaml-platform"
+      ]
+    }
+  },
+  "mounts": [
+    "source=${localWorkspaceFolder},target=/workspace,type=bind"
+  ],
+  "postCreateCommand": "opam install . --deps-only --yes",
+  "remoteUser": "opam"
+}
