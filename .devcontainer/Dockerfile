@@ -10,7 +10,7 @@ RUN sudo apt-get update && sudo apt-get install -y --no-install-recommends \
 
 USER opam
 
-RUN opam switch create etl 4.14.0 --yes && \
+RUN opam switch 5.3 --yes && \
     eval $(opam env) && \
     opam install -y \
     dune \
