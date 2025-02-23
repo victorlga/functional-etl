@@ -1,6 +1,5 @@
 FROM ocaml/opam:latest
 
-# Install system dependencies
 RUN sudo apt-get update && sudo apt-get install -y --no-install-recommends \
     m4 \
     pkg-config \
@@ -11,8 +10,17 @@ RUN sudo apt-get update && sudo apt-get install -y --no-install-recommends \
 
 USER opam
 
-RUN opam switch create 4.14.0 --yes && eval $(opam env)
-RUN opam install -y dune utop merlin ocaml-lsp-server earlybird
+RUN opam switch create etl 4.14.0 --yes && \
+    eval $(opam env) && \
+    opam install -y \
+    dune \
+    utop \
+    merlin \
+    ocaml-lsp-server \
+    earlybird \
+    odoc \
+    ocamlformat && \
+    dune init proj etl
 
-COPY . /home/opam/
-WORKDIR /home/opam/workspace
+COPY . /home/opam/workspace/
+WORKDIR /home/opam/workspace/
