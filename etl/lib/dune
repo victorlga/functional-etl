@@ -1,2 +1,4 @@
 (library
- (name etl))
+ (name lib)
+ (modules types parse transform extract load)
+ (libraries csv))
