@@ -44,12 +44,12 @@ order_id,total_amount,total_taxes
 
 ## Basic requirements
 
-- [ ] The project must be implemented in **OCaml**.  
-- [ ] To compute the output, it is required to use **map**, **reduce**, and **filter**.  
-- [ ] The code must include functions for reading and writing CSV files, which will result in **impure functions**.  
-- [ ] Separate **impure** functions from **pure** functions in different project files.  
-- [ ] The input data must be loaded into a **list of records**.  
-- [ ] It is mandatory to use **helper functions** to load the fields into a record.  
+- [x] The project must be implemented in **OCaml**.  
+- [x] To compute the output, it is required to use **map**, **reduce**, and **filter**.  
+- [x] The code must include functions for reading and writing CSV files, which will result in **impure functions**.  
+- [x] Separate **impure** functions from **pure** functions in different project files.  
+- [x] The input data must be loaded into a **list of records**.  
+- [x] It is mandatory to use **helper functions** to load the fields into a record.  
 - [ ] A project **report** must be written, detailing how each step was implemented. This should serve as a guide for someone looking to recreate the project in the future. The report must also state whether **generative AI** was used or not.
 
 ## Optional requirements
@@ -57,7 +57,7 @@ order_id,total_amount,total_taxes
 - [ ] Read the input data from a static file available on the internet (exposed via HTTP).  
 - [ ] Save the output data in an **SQLite database**.  
 - [ ] Process the input tables separately if needed, but preferably use an **inner join** to merge the tables before transformations.  
-- [ ] Organize the ETL project using **Dune**.  
+- [x] Organize the ETL project using **Dune**.  
 - [ ] Document all functions using the **docstring format**.  
 - [ ] Produce an additional output with **average revenue and taxes paid**, grouped by **month and year**.  
 - [ ] Generate **comprehensive test files** for all **pure functions**.  
