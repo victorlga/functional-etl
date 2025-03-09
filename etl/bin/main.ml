@@ -16,15 +16,15 @@ let get_list_from_user prompt =
 
 let main orders_filepath order_item_filepath order_totals_filepath statuses origins =
   let raw_orders = extract_csv_from_file orders_filepath in
-  let parsed_orders = parse_orders raw_orders in
+  let parsed_orders = List.map parse_order raw_orders in
   let parsed_statuses = List.map parse_status statuses in
   let parsed_origins = List.map parse_origin origins in
   let orders_filtered_by_status = filter_orders_by_statuses parsed_orders parsed_statuses in
   let orders = filter_orders_by_origins orders_filtered_by_status parsed_origins in
   let raw_order_items = extract_csv_from_file order_item_filepath in
-  let order_items = parse_order_items raw_order_items in
+  let order_items = List.map parse_order_item raw_order_items in
   let order_totals = compute_order_totals orders order_items in
-  write_to_csv order_totals_filepath order_totals "order_id,total_amount,total_tax"
+  write_order_totals_to_csv order_totals_filepath order_totals
 
 let () =
   print_endline "Please enter the statuses you want to consider (e.g., Pending, Cancelled, Complete). Enter one per line, and press Enter twice to finish:";
