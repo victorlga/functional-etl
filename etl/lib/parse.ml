@@ -6,11 +6,13 @@ let parse_float raw_value = float_of_string raw_value
 let parse_status = function
   | "Pending" -> Pending
   | "Complete" -> Complete
-  | _ -> Cancelled
+  | "Cancelled" -> Cancelled
+  | s -> failwith (Printf.sprintf "Invalid status: %s" s)
 
 let parse_origin = function
   | "O" -> O
-  | _ -> P
+  | "P" -> P
+  | s -> failwith (Printf.sprintf "Invalid origin: %s" s)
 
 let parse_order row =
   let id = Csv.Row.find row "id" |> parse_int in
