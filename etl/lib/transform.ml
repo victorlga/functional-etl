@@ -1,10 +1,10 @@
 open Types
 
-let filter_orders_by_status orders status =
-  List.filter (fun order -> order.status = status) orders
+let filter_orders_by_statuses orders statuses =
+  List.filter (fun order -> List.mem order.status statuses) orders
 
-let filter_orders_by_origin orders origin =
-  List.filter (fun order -> order.origin = origin) orders
+let filter_orders_by_origins orders origins =
+  List.filter (fun order -> List.mem order.origin origins) orders
 
 let compute_totals (order_items : order_item list) order_id =
   let matching_items = List.filter (fun (item : order_item) -> item.order_id = order_id) order_items in
