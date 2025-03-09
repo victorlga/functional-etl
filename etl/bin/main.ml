@@ -3,7 +3,7 @@
 
 let extract_csv_from_file filepath = Csv.Rows.load ~has_header:true filepath
 
-let extract_csv_from_web url = url
+(* let extract_csv_from_web url = url *)
 
 (* Início do Parse *)
 
@@ -12,15 +12,15 @@ type origin = O | P
 
 type order = {
   id : int;
-  client_id : int;
-  order_datetime : string;
+  (* client_id : int; *)
+  (* order_datetime : string; *)
   status : status;
   origin : origin;
 }
 
 type order_item = {
   order_id: int;
-  product_id: int;
+  (* product_id: int; *)
   quantity: int;
   price: float;
   tax: float;
@@ -46,20 +46,20 @@ let parse_origin = function
 (* Parsing order row *)
 let parse_order_row row =
   let id = Csv.Row.find row "id" |> parse_int in
-  let client_id = Csv.Row.find row "client_id" |> parse_int in
-  let order_datetime = Csv.Row.find row "order_date" in
+  (* let client_id = Csv.Row.find row "client_id" |> parse_int in *)
+  (* let order_datetime = Csv.Row.find row "order_date" in *)
   let status = Csv.Row.find row "status" |> parse_status in
   let origin = Csv.Row.find row "origin" |> parse_origin in
-  { id; client_id; order_datetime; status; origin }
+  { id; status; origin }
 
 (* Parsing order item row *)
 let parse_order_item_row row =
   let order_id = Csv.Row.find row "order_id" |> parse_int in
-  let product_id = Csv.Row.find row "product_id" |> parse_int in
+  (* let product_id = Csv.Row.find row "product_id" |> parse_int in *)
   let quantity = Csv.Row.find row "quantity" |> parse_int in
   let price = Csv.Row.find row "price" |> parse_float in
   let tax = Csv.Row.find row "tax" |> parse_float in
-  { order_id; product_id; quantity; price; tax }
+  { order_id; quantity; price; tax }
 
 let parse_orders orders = List.map parse_order_row orders
 let parse_order_items order_items = List.map parse_order_item_row order_items
@@ -93,11 +93,29 @@ let compute_order_totals orders order_items =
       { order_id = order.id; total_amount; total_tax }
   ) orders
 
-let load_to_csv order_totals order_totals_filepath =
-  ()
+(* Made with Grok *)
+let write_to_csv filepath records header =
+  let oc = open_out filepath in
+  try
+    (* Write the header *)
+    output_string oc (header ^ "\n");
+    
+    (* Write each record *)
+    List.iter (fun record ->
+      let row = String.concat "," [
+        string_of_int record.order_id;
+        string_of_float record.total_amount;
+        string_of_float record.total_tax
+      ] in
+      output_string oc (row ^ "\n")
+    ) records;
+    
+    close_out oc
+  with e ->
+    close_out oc;
+    raise e
 
 (* Toda a lógica reunida *)
-
 let main orders_filepath order_item_filepath order_totals_filepath status origin =
   let raw_orders = extract_csv_from_file orders_filepath in
   let parsed_orders = parse_orders raw_orders in
@@ -108,6 +126,6 @@ let main orders_filepath order_item_filepath order_totals_filepath status origin
   let raw_order_items = extract_csv_from_file order_item_filepath in
   let order_items = parse_order_items raw_order_items in
   let order_totals = compute_order_totals orders order_items in
-  load_to_csv order_totals order_totals_filepath
+  write_to_csv order_totals_filepath order_totals "order_id,total_amount,total_tax"
 
 let () = main "data/order.csv" "data/order_item.csv" "data/order_totals.csv" "Pending" "O"
