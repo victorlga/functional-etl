@@ -78,27 +78,19 @@ type order_totals = {
   total_tax: float;
 }
 
-let compute_total_amount (order_items: order_item list) order_id =
+let compute_totals (order_items: order_item list) order_id =
   let matching_items = List.filter (fun (item: order_item) -> item.order_id = order_id) order_items in
   List.fold_left (
-    fun acc item ->
-      acc +. item.price *. (float_of_int item.quantity)
-  ) 0.0 matching_items
-
-let compute_total_tax (order_items: order_item list) order_id =
-  let matching_items = List.filter (fun (item: order_item) -> item.order_id = order_id) order_items in
-  List.fold_left (
-    fun acc item ->
-      acc +. item.price *. item.tax
-  ) 0.0 matching_items
+    fun (amount, tax) item ->
+      let item_amount = item.price *. (float_of_int item.quantity) in
+      ( amount +. item_amount, tax +. item_amount *. item.tax )
+  ) (0.0, 0.0) matching_items
 
 let compute_order_totals orders order_items =
   List.map (
-    fun order -> {
-      order_id = order.id;
-      total_amount = (compute_total_amount order_items order.id);
-      total_tax =(compute_total_tax order_items order.id)
-    }
+    fun order ->
+      let (total_amount, total_tax) = (compute_totals order_items order.id) in
+      { order_id = order.id; total_amount; total_tax }
   ) orders
 
 let load_to_csv order_totals order_totals_filepath =
@@ -117,6 +109,5 @@ let main orders_filepath order_item_filepath order_totals_filepath status origin
   let order_items = parse_order_items raw_order_items in
   let order_totals = compute_order_totals orders order_items in
   load_to_csv order_totals order_totals_filepath
-
 
 let () = main "data/order.csv" "data/order_item.csv" "data/order_totals.csv" "Pending" "O"
