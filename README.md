@@ -44,13 +44,13 @@ order_id,total_amount,total_taxes
 
 ## Basic requirements
 
-1. The project must be implemented in **OCaml**.  
-2. To compute the output, it is required to use **map**, **reduce**, and **filter**.  
-3. The code must include functions for reading and writing CSV files, which will result in **impure functions**.  
-4. Separate **impure** functions from **pure** functions in different project files.  
-5. The input data must be loaded into a **list of records**.  
-6. It is mandatory to use **helper functions** to load the fields into a record.  
-7. A project **report** must be written, detailing how each step was implemented. This should serve as a guide for someone looking to recreate the project in the future. The report must also state whether **generative AI** was used or not.
+- [ ] The project must be implemented in **OCaml**.  
+- [ ] To compute the output, it is required to use **map**, **reduce**, and **filter**.  
+- [ ] The code must include functions for reading and writing CSV files, which will result in **impure functions**.  
+- [ ] Separate **impure** functions from **pure** functions in different project files.  
+- [ ] The input data must be loaded into a **list of records**.  
+- [ ] It is mandatory to use **helper functions** to load the fields into a record.  
+- [ ] A project **report** must be written, detailing how each step was implemented. This should serve as a guide for someone looking to recreate the project in the future. The report must also state whether **generative AI** was used or not.
 
 ## Optional requirements
 

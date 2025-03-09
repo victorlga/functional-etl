@@ -1,4 +1,4 @@
 (executable
- (public_name etl)
  (name main)
- (libraries csv))
+ (public_name etl)
+ (libraries lib csv))
