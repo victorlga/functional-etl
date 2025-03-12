@@ -6,7 +6,7 @@ open Types
     @param records A list of records containing order_id, total_amount, and total_tax
     @raise Sys_error if the file cannot be opened or written to
     @raise e Any exception that occurs during writing will be re-raised after cleanup *)
-let write_order_totals_to_csv filepath records =
+let write_order_totals_to_csv records filepath =
   let header = "order_id,total_amount,total_tax\n" in
   let oc = open_out filepath in
   try
@@ -27,3 +27,6 @@ let write_order_totals_to_csv filepath records =
   with e ->
     close_out oc;
     raise e
+
+let load order_totals filepath =
+  write_order_totals_to_csv order_totals filepath

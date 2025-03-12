@@ -14,6 +14,15 @@ type order_item = {
   tax : float;
 }
 
+(* type t = {
+  order_id : int;
+  quantity : int;
+  price : float;
+  tax : float;
+  status : status;
+  origin : origin;
+} *)
+
 type order_totals = {
   order_id : int;
   total_amount : float;

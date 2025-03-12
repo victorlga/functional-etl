@@ -1,5 +1,4 @@
 open Lib.Extract
-open Lib.Parse
 open Lib.Transform
 open Lib.Load
 
@@ -27,16 +26,9 @@ let get_list_from_user prompt =
     @raise Sys_error if any file operation fails
     @raise Failure if parsing of statuses, origins, or CSV data fails *)
 let main orders_filepath order_item_filepath order_totals_filepath statuses origins =
-  let raw_orders = extract_csv_from_file orders_filepath in
-  let parsed_orders = List.map parse_order raw_orders in
-  let parsed_statuses = List.map parse_status statuses in
-  let parsed_origins = List.map parse_origin origins in
-  let orders_filtered_by_status = filter_orders_by_statuses parsed_orders parsed_statuses in
-  let orders = filter_orders_by_origins orders_filtered_by_status parsed_origins in
-  let raw_order_items = extract_csv_from_file order_item_filepath in
-  let order_items = List.map parse_order_item raw_order_items in
-  let order_totals = compute_order_totals orders order_items in
-  write_order_totals_to_csv order_totals_filepath order_totals
+  let (orders, order_items) = extract orders_filepath order_item_filepath in
+  let order_totals = transform orders order_items statuses origins in
+  load order_totals order_totals_filepath
 
 (** Entry point of the program. Prompts the user for statuses and origins, then processes order data.
     @raise End_of_file if the input stream is closed unexpectedly

@@ -1,3 +1,4 @@
+open Parse
 open Types
 
 (** Filters a list of orders by a list of statuses.
@@ -37,3 +38,11 @@ let compute_order_totals orders order_items =
       let total_amount, total_tax = compute_amount_tax_totals order_items order.id in
       { order_id = order.id; total_amount; total_tax })
     orders
+
+let transform orders order_items statuses origins =
+  let parsed_statuses = List.map parse_status statuses in
+  let parsed_origins = List.map parse_origin origins in
+  let filtered_orders = filter_orders_by_statuses orders parsed_statuses in
+  let filtered_orders = filter_orders_by_origins filtered_orders parsed_origins in
+  let order_totals = compute_order_totals filtered_orders order_items in
+  order_totals
