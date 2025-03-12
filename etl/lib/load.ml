@@ -1,11 +1,13 @@
 open Types
 
-(** MADE WITH GROK
+(**
     Writes order total records to a CSV file.
-    @param filepath The path to the output CSV file
-    @param records A list of records containing order_id, total_amount, and total_tax
-    @raise Sys_error if the file cannot be opened or written to
-    @raise e Any exception that occurs during writing will be re-raised after cleanup *)
+    
+    @param filepath The path to the output CSV file.
+    @param records A list of records containing order_id, total_amount, and total_tax.
+    @raise Sys_error If the file cannot be opened or written to.
+    @raise Failure If an error occurs during writing, after ensuring the file is properly closed.
+*)
 let write_order_totals_to_csv records filepath =
   let header = "order_id,total_amount,total_tax\n" in
   let oc = open_out filepath in
@@ -28,5 +30,13 @@ let write_order_totals_to_csv records filepath =
     close_out oc;
     raise e
 
+(**
+    Saves order total records to a CSV file.
+    
+    @param order_totals A list of order total records.
+    @param filepath The path to the output CSV file.
+    @raise Sys_error If file operations fail.
+    @raise Failure If an error occurs during writing.
+*)
 let load order_totals filepath =
   write_order_totals_to_csv order_totals filepath
