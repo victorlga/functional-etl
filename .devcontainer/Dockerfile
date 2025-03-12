@@ -6,7 +6,8 @@ RUN sudo apt-get update && sudo apt-get install -y --no-install-recommends \
     libssl-dev \
     build-essential \
     curl \
-    git
+    git \
+    libsqlite3-dev
 
 USER opam
 
@@ -19,7 +20,8 @@ RUN opam switch 5.3 --yes && \
     ocaml-lsp-server \
     earlybird \
     odoc \
-    ocamlformat && \
+    ocamlformat \
+    sqlite3.5.1.0 && \
     dune init proj etl
 
 COPY . /home/opam/workspace/
