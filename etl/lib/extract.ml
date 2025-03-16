@@ -13,7 +13,14 @@ let ( let* ) = Lwt.bind
 let extract_csv_from_file filepath =
   Csv.Rows.load ~has_header:true filepath
 
-(* https://ocaml.org/cookbook/http-get-request/cohttp-lwt-unix *)
+(**
+    Performs an HTTP GET request to the specified URL and returns the response body.
+    
+    @param url The URL to send the GET request to.
+    @return An Lwt promise resolving to Ok with the response body string on success,
+            or Error with the error message on failure.
+    @author Source: OCaml Cookbook (https://ocaml.org/cookbook/http-get-request/cohttp-lwt-unix)
+*)
 let http_get url =
   let* (resp, body) =
     Cohttp_lwt_unix.Client.get (Uri.of_string url)
@@ -30,7 +37,15 @@ let http_get url =
       Cohttp.Code.reason_phrase_of_code code
     ))
 
-let extract_csv_from_web url filepath=
+(**
+    Downloads a CSV file from a web URL and saves it locally.
+    
+    @param url The base URL where the CSV file is located.
+    @param filepath The relative path to the CSV file and local destination path.
+    @return Unit (side effect: saves file or prints error).
+    @raise Sys_error If file writing operations fail.
+*)
+let extract_and_load_csv_from_web url filepath=
   Lwt_main.run (
     let full_url = url ^ filepath in
     let* result = http_get full_url in
@@ -47,19 +62,19 @@ let extract_csv_from_web url filepath=
 
 
 (**
-    Extracts order and order item data from CSV files.
+    Downloads and parses order and order item data from CSV files hosted online.
     
-    @param orders_filepath Path to the CSV file containing order data.
-    @param order_items_filepath Path to the CSV file containing order item data.
-    @return A tuple containing lists of parsed orders and order items.
-    @raise Sys_error If file operations fail.
-    @raise Csv.Error If the CSV format is invalid.
-    @raise Failure If parsing of order or order item data fails.
+    @param orders_filepath Local path where the orders CSV will be saved and read from.
+    @param order_items_filepath Local path where the order items CSV will be saved and read from.
+    @return A tuple of (orders, order_items), where each is a list of parsed records.
+    @raise Sys_error If file download or read operations fail.
+    @raise Csv.Error If the CSV files have an invalid format.
+    @raise Failure If parsing of order or order item records fails due to invalid data.
 *)
 let extract orders_filepath order_items_filepath =
   let url = "https://raw.githubusercontent.com/victorlga/etl-ocaml/refs/heads/main/" in
-  extract_csv_from_web url orders_filepath ;
-  extract_csv_from_web url order_items_filepath ;
+  extract_and_load_csv_from_web url orders_filepath ;
+  extract_and_load_csv_from_web url order_items_filepath ;
 
   let raw_orders = extract_csv_from_file orders_filepath in
   let orders = List.map parse_order raw_orders in
