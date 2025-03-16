@@ -47,4 +47,4 @@ let () =
   let statuses = get_list_from_user "Status: " in
   print_endline "Please enter the origins you want to consider (e.g., O, P). Enter one per line, and press Enter twice to finish:";
   let origins = get_list_from_user "Origin: " in
-  main "data/order.csv" "data/order_item.csv" "data/order_totals" statuses origins
+  main "data/orders.csv" "data/order_items.csv" "data/order_totals" statuses origins

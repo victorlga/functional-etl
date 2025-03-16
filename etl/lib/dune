@@ -1,4 +1,4 @@
 (library
  (name lib)
  (modules types parse transform extract load)
- (libraries csv))
+ (libraries lwt csv sqlite3 cohttp-lwt-unix cohttp))

@@ -54,7 +54,7 @@ order_id,total_amount,total_taxes
 
 ## Optional requirements
 
-- [ ] Read the input data from a static file available on the internet (exposed via HTTP).  
+- [x] Read the input data from a static file available on the internet (exposed via HTTP).  
 - [x] Save the output data in an **SQLite database**.
 - [ ] Process the input tables separately if needed, but preferably use an **inner join** to merge the tables before transformations.
 - [x] Organize the ETL project using **Dune**.
