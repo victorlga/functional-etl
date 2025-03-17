@@ -14,16 +14,16 @@ type order_item = {
   tax : float;
 }
 
-(* type t = {
+type order_with_item = {
   order_id : int;
+  status : status;
+  origin : origin;
   quantity : int;
   price : float;
   tax : float;
-  status : status;
-  origin : origin;
-} *)
+}
 
-type order_totals = {
+type order_total = {
   order_id : int;
   total_amount : float;
   total_tax : float;
