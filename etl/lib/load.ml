@@ -33,19 +33,23 @@ let write_order_totals_to_csv order_totals filepath =
 
 
 (**
-    Creates the order_totals table in the SQLite database if it doesn't exist.
+    Creates or drops and recreates the order_totals table in the SQLite database.
     
     @param db The SQLite database connection.
     @return Unit (side effect: creates table or prints error).
     @raise Sqlite3.Error If the table creation query fails unexpectedly.
 *)
 let create_order_totals_table db =
+  let drop_table_sql = "DROP TABLE IF EXISTS order_totals" in
+  ignore(Sqlite3.exec db drop_table_sql);
+
   let create_table_sql = 
-    "CREATE TABLE IF NOT EXISTS order_totals (order_id INTEGER PRIMARY KEY, total_amount REAL, total_tax REAL)" 
+    "CREATE TABLE order_totals (order_id INTEGER PRIMARY KEY, total_amount REAL, total_tax REAL)" 
   in
   match Sqlite3.exec db create_table_sql with
   | Sqlite3.Rc.OK -> print_endline "Table created successfully"
   | _ -> print_endline "Failed to create table"
+
 
 (**
     Inserts a single order total into the order_totals table.
@@ -67,7 +71,12 @@ let insert_order_total db order_total =
   ignore (Sqlite3.bind stmt 3 (Sqlite3.Data.FLOAT order_total.total_tax));
   match Sqlite3.step stmt with
   | Sqlite3.Rc.DONE -> ignore (Sqlite3.finalize stmt); print_endline "Insert successful"
-  | _ -> ignore (Sqlite3.finalize stmt); failwith "Insert failed"
+  | rc -> 
+      ignore (Sqlite3.finalize stmt); 
+      Printf.printf "Insert failed with code %s: %s\n" 
+        (Sqlite3.Rc.to_string rc) (Sqlite3.errmsg db);
+      failwith "Insert failed"
+
 
 (**
     Writes a list of order totals to a SQLite database.
