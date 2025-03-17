@@ -59,48 +59,48 @@ let compute_amount (o_w_i : order_with_item) : float =
 
 
 (**
-    Updates the running totals of amount and tax for an order in a hashtable.
+    Updates the running totals of amount and tax for an order in an immutable map.
     
-    @param aux The hashtable storing order totals, mapping order IDs to (total_amount, total_tax) tuples.
+    @param aux The map storing order totals, mapping order IDs to (total_amount, total_tax) tuples.
     @param o_w_i The order item record containing order_id, price, quantity, and tax.
-    @return Unit, as the hashtable is modified in place.
+    @return A new map with the updated totals, as maps are immutable.
 *)
-let update_order_totals (aux : (int, float * float) Hashtbl.t) (o_w_i : order_with_item) : unit =
-  let prev_values = Hashtbl.find_opt aux o_w_i.order_id |> Option.value ~default:(0.0, 0.0) in
-  let prev_amount = fst prev_values in
-  let prev_tax = snd prev_values in
+let update_order_totals (aux : (float * float) OrderTotalMap.t) (o_w_i : order_with_item) : (float * float) OrderTotalMap.t =
+  let prev_values = OrderTotalMap.find_opt o_w_i.order_id aux |> Option.value ~default:(0.0, 0.0) in
+  let prev_amount, prev_tax = prev_values in
   let amount = compute_amount o_w_i in
   let total_amount = prev_amount +. amount in
   let total_tax = prev_tax +. amount *. o_w_i.tax in
-  Hashtbl.replace aux o_w_i.order_id (total_amount, total_tax)
+  OrderTotalMap.add o_w_i.order_id (total_amount, total_tax) aux
 
 
 (**
-    Converts a hashtable of order totals into a list of order_total records.
+    Converts a map of order totals into a list of order_total records.
     
-    @param tbl The hashtable mapping order IDs to (total_amount, total_tax) tuples.
+    @param map The map storing order totals, mapping order IDs to (total_amount, total_tax) tuples.
     @return A list of order_total records, each containing order_id, total_amount, and total_tax.
 *)
-let hashtbl_to_order_totals (tbl : (int, float * float) Hashtbl.t) : order_total list =
-  Hashtbl.fold (fun order_id (total_amount, total_tax) acc ->
+let map_to_order_totals (map : (float * float) OrderTotalMap.t) : order_total list =
+  OrderTotalMap.fold (fun order_id (total_amount, total_tax) acc ->
     { order_id; total_amount; total_tax } :: acc
-  ) tbl []
+  ) map []
 
 
 (**
     Computes total amount and tax for each order based on its items.
     
     @param orders_with_items The list of order items to compute totals from.
-    @return A list of records containing order_id, total_amount, and total_tax for each order.
+    @return A list of order_total records, each containing order_id, total_amount, and total_tax.
+    
+    This function processes the list of order items using a fold operation with an immutable map,
+    accumulating order totals and then converting them into a list.
 *)
 let compute_order_totals (orders_with_items : order_with_item list) : order_total list =
-  let o_w_i_len = List.length orders_with_items in
-  let hashtbl_ots = List.fold_left (fun aux o_w_i ->
-    update_order_totals aux o_w_i;
-    aux
-    ) (Hashtbl.create o_w_i_len) orders_with_items 
+  let ot_maps = List.fold_left (fun aux o_w_i ->
+    update_order_totals aux o_w_i
+    ) OrderTotalMap.empty orders_with_items 
   in
-  hashtbl_to_order_totals hashtbl_ots
+  map_to_order_totals ot_maps
 
 
 (**

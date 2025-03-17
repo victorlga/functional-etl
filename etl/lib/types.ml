@@ -28,3 +28,5 @@ type order_total = {
   total_amount : float;
   total_tax : float;
 }
+
+module OrderTotalMap = Map.Make(Int)
