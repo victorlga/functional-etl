@@ -59,5 +59,6 @@ order_id,total_amount,total_taxes
 - [x] Process the input tables separately if needed, but preferably use an **inner join** to merge the tables before transformations.
 - [x] Organize the ETL project using **Dune**.
 - [x] Document all functions using the **docstring format**.  **MADE WITH GROK**
-- [ ] Produce an additional output with **average revenue and taxes paid**, grouped by **month and year**.
+- [x] Produce an additional output with **average revenue and taxes paid**, grouped by **month and year**.
 - [ ] Generate **comprehensive test files** for all **pure functions**.
+- [ ] Use ocamldocs to generate documentation

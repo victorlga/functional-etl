@@ -3,6 +3,8 @@ type origin = O | P
 
 module OrderTotalMap = Map.Make(Int)
 
+module FinRecordMap = Map.Make(String)
+
 type order = {
   id : int;
   date : string;

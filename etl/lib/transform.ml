@@ -103,8 +103,30 @@ let compute_order_totals orders_with_items =
   |> order_total_map_to_list
 
 
-(* let compute_financial_records orders_with_items = ("") *)
+let update_financial_records aux (o_w_i : order_with_item) =
+  let prev_values = FinRecordMap.find_opt o_w_i.date aux |> Option.value ~default:(0.0, 0.0) in
+  let prev_revenue, prev_tax = prev_values in
+  let amount = compute_amount o_w_i in
+  let total_revenue = prev_revenue +. amount in
+  let total_tax = prev_tax +. amount *. o_w_i.tax in
+  FinRecordMap.add o_w_i.date (total_revenue, total_tax) aux
   
+  
+let financial_record_map_to_list map =
+  FinRecordMap.fold (fun period (revenue, tax) acc ->
+    { period; revenue; tax } :: acc
+  ) map []
+
+
+let compute_financial_records orders_with_items =
+  List.fold_left (fun aux o_w_i ->
+    update_financial_records aux o_w_i
+  ) FinRecordMap.empty orders_with_items
+  |> financial_record_map_to_list
+  |> List.sort (fun r1 r2 -> String.compare r1.period r2.period)
+  |> List.rev
+
+
 let parse_and_filter_orders raw_orders criterias = 
   let (statuses, origins) = criterias in
   let orders = List.map parse_order raw_orders in
@@ -132,6 +154,6 @@ let transform data criterias =
   let order_items = parse_order_items raw_order_items in
   let orders_with_items = inner_join_orders_items filtered_orders order_items in
   let order_totals = compute_order_totals orders_with_items in
-  (* let financial_records = compute_financial_records orders_with_items in *)
-  (order_totals, "")
+  let financial_records = compute_financial_records orders_with_items in
+  (order_totals, financial_records)
 
