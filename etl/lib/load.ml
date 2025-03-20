@@ -31,6 +31,27 @@ let write_order_totals_to_csv order_totals filepath =
     close_out oc;
     raise e
 
+let write_financial_records_to_csv financial_records filepath =
+  let header = "period,revenue,tax\n" in
+  let oc = open_out filepath in
+  try
+    output_string oc header;
+    List.iter
+      (fun fin_record ->
+        let row =
+          String.concat ","
+            [
+              fin_record.period;
+              string_of_float fin_record.revenue;
+              string_of_float fin_record.tax;
+            ]
+        in
+        output_string oc (row ^ "\n"))
+        financial_records;
+    close_out oc
+  with e ->
+    close_out oc;
+    raise e
 
 (**
     Creates or drops and recreates the order_totals table in the SQLite database.
@@ -47,8 +68,8 @@ let create_order_totals_table db =
     "CREATE TABLE order_totals (order_id INTEGER PRIMARY KEY, total_amount REAL, total_tax REAL)" 
   in
   match Sqlite3.exec db create_table_sql with
-  | Sqlite3.Rc.OK -> print_endline "Table created successfully"
-  | _ -> print_endline "Failed to create table"
+  | Sqlite3.Rc.OK -> print_endline "Table order_totals created successfully"
+  | _ -> print_endline "Failed to create order_totals table"
 
 
 (**
@@ -64,13 +85,12 @@ let insert_order_total db order_total =
   let insert_sql = 
     "INSERT INTO order_totals (order_id, total_amount, total_tax) VALUES (?, ?, ?)" 
   in
-  Printf.printf "Inserting order_id: %d\n" order_total.order_id;
   let stmt = Sqlite3.prepare db insert_sql in
   ignore (Sqlite3.bind stmt 1 (Sqlite3.Data.INT (Int64.of_int order_total.order_id)));
   ignore (Sqlite3.bind stmt 2 (Sqlite3.Data.FLOAT order_total.total_amount));
   ignore (Sqlite3.bind stmt 3 (Sqlite3.Data.FLOAT order_total.total_tax));
   match Sqlite3.step stmt with
-  | Sqlite3.Rc.DONE -> ignore (Sqlite3.finalize stmt); print_endline "Insert successful"
+  | Sqlite3.Rc.DONE -> ignore (Sqlite3.finalize stmt);
   | rc -> 
       ignore (Sqlite3.finalize stmt); 
       Printf.printf "Insert failed with code %s: %s\n" 
@@ -90,8 +110,45 @@ let insert_order_total db order_total =
 let write_order_totals_to_sqlite order_totals db_name =
   let db = Sqlite3.db_open db_name in
   create_order_totals_table db;
-  Printf.printf "Processing %d order_totals\n" (List.length order_totals);
   List.iter (insert_order_total db) order_totals;
+  print_endline "Order totals inserted successfully";
+  ignore (Sqlite3.db_close db)
+
+
+let create_financial_records_table db =
+  let drop_table_sql = "DROP TABLE IF EXISTS financial_records" in
+  ignore(Sqlite3.exec db drop_table_sql);
+
+  let create_table_sql = 
+    "CREATE TABLE financial_records (period STRING PRIMARY KEY, revenue REAL, tax REAL)" 
+  in
+  match Sqlite3.exec db create_table_sql with
+  | Sqlite3.Rc.OK -> print_endline "\nTable financial_records created successfully"
+  | _ -> print_endline "Failed to create financial_records table"
+
+
+let insert_financial_record db financial_record =
+  let insert_sql = 
+    "INSERT INTO financial_records (period, revenue, tax) VALUES (?, ?, ?)" 
+  in
+  let stmt = Sqlite3.prepare db insert_sql in
+  ignore (Sqlite3.bind stmt 1 (Sqlite3.Data.TEXT financial_record.period));
+  ignore (Sqlite3.bind stmt 2 (Sqlite3.Data.FLOAT financial_record.revenue));
+  ignore (Sqlite3.bind stmt 3 (Sqlite3.Data.FLOAT financial_record.tax));
+  match Sqlite3.step stmt with
+  | Sqlite3.Rc.DONE -> ignore (Sqlite3.finalize stmt);
+  | rc -> 
+      ignore (Sqlite3.finalize stmt); 
+      Printf.printf "Insert failed with code %s: %s\n" 
+        (Sqlite3.Rc.to_string rc) (Sqlite3.errmsg db);
+      failwith "Insert failed"
+
+
+let write_financial_records_to_sqlite financial_records db_name =
+  let db = Sqlite3.db_open db_name in
+  create_financial_records_table db;
+  List.iter (insert_financial_record db) financial_records;
+  print_endline "Financiel records inserted successfully";
   ignore (Sqlite3.db_close db)
 
 
@@ -104,9 +161,9 @@ let write_order_totals_to_sqlite order_totals db_name =
     @raise Failure If an error occurs during writing.
 *)
 let load result filepaths =
-  let (order_totals, _) = result in
-  let (ot_filepath, _) = filepaths in
+  let (order_totals, financial_records) = result in
+  let (ot_filepath, fr_filepath) = filepaths in
   write_order_totals_to_csv order_totals (ot_filepath ^ ".csv") ;
   write_order_totals_to_sqlite order_totals (ot_filepath ^ ".sqlite") ;
-  (* write_financial_records_to_csv financial_records (fr_filepath ^ ".csv") ;
-  write_financial_records_to_sqlite financial_records (fr_filepath ^ ".sqlite") ; *)
+  write_financial_records_to_csv financial_records (fr_filepath ^ ".csv") ;
+  write_financial_records_to_sqlite financial_records (fr_filepath ^ ".sqlite") ;
