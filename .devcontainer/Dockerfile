@@ -33,5 +33,3 @@ RUN opam switch 5.3 --yes && \
 
 COPY . /home/opam/workspace/
 WORKDIR /home/opam/workspace/
-
-# RUN sudo apt-get install -y 
