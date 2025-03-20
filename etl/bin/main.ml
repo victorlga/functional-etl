@@ -30,10 +30,10 @@ let get_list_from_user prompt =
     @raise Sys_error If any file operation fails.
     @raise Failure If parsing of statuses, origins, or CSV data fails.
 *)
-let main orders_filepath order_item_filepath order_totals_filepath statuses origins =
-  let (orders, order_items) = extract orders_filepath order_item_filepath in
-  let order_totals = transform orders order_items statuses origins in
-  load order_totals order_totals_filepath
+let main data_filepaths result_filepaths criterias =
+  let data = extract data_filepaths in
+  let result = transform data criterias in
+  load result result_filepaths
 
 (**
     Entry point of the program. Prompts the user for statuses and origins, then processes order data.
@@ -43,8 +43,14 @@ let main orders_filepath order_item_filepath order_totals_filepath statuses orig
     @raise Failure If parsing fails.
 *)
 let () =
-  print_endline "Please enter the statuses you want to consider (e.g., Pending, Cancelled, Complete). Enter one per line, and press Enter twice to finish:";
+  let data_filepaths = ("data/orders.csv", "data/order_items.csv") in
+  let result_filepaths = ("data/ot/order_totals", "data/fr/financial_records") in
+
+  print_endline "Please enter the statuses you want to consider (e.g., Pending, Cancelled, Complete). Entry one per line, and press Enter twice to finish:";
   let statuses = get_list_from_user "Status: " in
+
   print_endline "Please enter the origins you want to consider (e.g., O, P). Enter one per line, and press Enter twice to finish:";
   let origins = get_list_from_user "Origin: " in
-  main "data/orders.csv" "data/order_items.csv" "data/order_totals" statuses origins
+
+  let criterias = (statuses, origins) in
+  main data_filepaths result_filepaths criterias

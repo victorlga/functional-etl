@@ -103,6 +103,10 @@ let write_order_totals_to_sqlite order_totals db_name =
     @raise Sys_error If file operations fail.
     @raise Failure If an error occurs during writing.
 *)
-let load order_totals filepath =
-  write_order_totals_to_csv order_totals (filepath ^ ".csv") ;
-  write_order_totals_to_sqlite order_totals (filepath ^ ".sqlite")
+let load result filepaths =
+  let (order_totals, _) = result in
+  let (ot_filepath, _) = filepaths in
+  write_order_totals_to_csv order_totals (ot_filepath ^ ".csv") ;
+  write_order_totals_to_sqlite order_totals (ot_filepath ^ ".sqlite") ;
+  (* write_financial_records_to_csv financial_records (fr_filepath ^ ".csv") ;
+  write_financial_records_to_sqlite financial_records (fr_filepath ^ ".sqlite") ; *)

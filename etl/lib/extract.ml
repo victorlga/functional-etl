@@ -1,5 +1,3 @@
-open Parse
-
 let ( let* ) = Lwt.bind
 
 (**
@@ -62,22 +60,21 @@ let extract_and_load_csv_from_web url filepath=
 
 
 (**
-    Downloads and parses order and order item data from CSV files hosted online.
+    Downloads order and order item data from CSV files hosted online.
     
     @param orders_filepath Local path where the orders CSV will be saved and read from.
     @param order_items_filepath Local path where the order items CSV will be saved and read from.
-    @return A tuple of (orders, order_items), where each is a list of parsed records.
+    @return A tuple of (orders, order_items) raw data.
     @raise Sys_error If file download or read operations fail.
     @raise Csv.Error If the CSV files have an invalid format.
     @raise Failure If parsing of order or order item records fails due to invalid data.
 *)
-let extract orders_filepath order_items_filepath =
+let extract filepaths =
+  let (orders_filepath, order_items_filepath) = filepaths in
   let url = "https://raw.githubusercontent.com/victorlga/etl-ocaml/refs/heads/main/" in
   extract_and_load_csv_from_web url orders_filepath ;
   extract_and_load_csv_from_web url order_items_filepath ;
 
-  let raw_orders = extract_csv_from_file orders_filepath in
-  let orders = List.map parse_order raw_orders in
-  let raw_order_items = extract_csv_from_file order_items_filepath in
-  let order_items = List.map parse_order_item raw_order_items in
+  let orders = extract_csv_from_file orders_filepath in
+  let order_items = extract_csv_from_file order_items_filepath in
   (orders, order_items)
