@@ -1,8 +1,11 @@
 type status = Pending | Complete | Cancelled
 type origin = O | P
 
+module OrderTotalMap = Map.Make(Int)
+
 type order = {
   id : int;
+  date : string;
   status : status;
   origin : origin;
 }
@@ -16,6 +19,7 @@ type order_item = {
 
 type order_with_item = {
   order_id : int;
+  date : string;
   status : status;
   origin : origin;
   quantity : int;
@@ -29,4 +33,8 @@ type order_total = {
   total_tax : float;
 }
 
-module OrderTotalMap = Map.Make(Int)
+type financial_record = {
+  period: string;
+  revenue: float;
+  tax: float;
+}
