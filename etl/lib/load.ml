@@ -2,7 +2,7 @@ open Types
 
 let ( let* ) = Result.bind
 
-(* Feito com o GROK *)
+
 let with_output_channel filepath f =
   let oc = open_out filepath in
   Fun.protect ~finally:(fun () -> close_out oc) (fun () -> f oc)
@@ -23,7 +23,7 @@ let write_order_totals_to_csv order_totals filepath =
       ot.total_tax
   in
   write_csv header to_row order_totals filepath;
-  Ok "Order totals CSV written successfully"
+  Ok ()
 
 
 let write_financial_records_to_csv financial_records filepath =
@@ -35,18 +35,17 @@ let write_financial_records_to_csv financial_records filepath =
       fr.tax
   in
   write_csv header to_row financial_records filepath;
-  Ok "Financial records CSV written successfully"
+  Ok ()
 
 
 let create_table db table_name drop_sql create_sql =
   ignore (Sqlite3.exec db drop_sql);
   match Sqlite3.exec db create_sql with
-  | Sqlite3.Rc.OK -> Ok (Printf.sprintf "Table %s created" table_name)
+  | Sqlite3.Rc.OK -> Ok ()
   | rc -> Error (Printf.sprintf "Failed to create %s: %s" 
                   table_name (Sqlite3.Rc.to_string rc))
 
 
-(* Feito com o GROK *)
 let with_transaction db f =
   Sqlite3.exec db "BEGIN TRANSACTION" |> ignore;
   try
@@ -78,10 +77,9 @@ let insert_order_total db order_total =
   | Sqlite3.Rc.DONE -> 
       ignore (Sqlite3.finalize stmt);
       Ok ()
-  | rc -> 
+  | _ -> 
       ignore (Sqlite3.finalize stmt);
-      Error (Printf.sprintf "Insert failed with code %s: %s"
-              (Sqlite3.Rc.to_string rc) (Sqlite3.errmsg db))
+      Error ()
 
 
 let write_order_totals_to_sqlite order_totals db_name =
@@ -94,7 +92,7 @@ let write_order_totals_to_sqlite order_totals db_name =
           let results = List.map (insert_order_total db) order_totals in
           if List.exists Result.is_error results
           then Error "Some order total insertions failed"
-          else Ok "Order totals inserted successfully"
+          else Ok ()
     ))
 
 
@@ -119,10 +117,9 @@ let insert_financial_record db financial_record =
   | Sqlite3.Rc.DONE -> 
       ignore (Sqlite3.finalize stmt);
       Ok ()
-  | rc -> 
+  | _ -> 
       ignore (Sqlite3.finalize stmt);
-      Error (Printf.sprintf "Insert failed with code %s: %s"
-              (Sqlite3.Rc.to_string rc) (Sqlite3.errmsg db))
+      Error ()
 
 
 let write_financial_records_to_sqlite financial_records db_name =
@@ -135,7 +132,7 @@ let write_financial_records_to_sqlite financial_records db_name =
           let results = List.map (insert_financial_record db) financial_records in
           if List.exists Result.is_error results
           then Error "Some financial record insertions failed"
-          else Ok "Financial records inserted successfully"))
+          else Ok ()))
 
 
 let load result filepaths =
