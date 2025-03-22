@@ -5,8 +5,22 @@ let ( let* ) = Result.bind
 
 (** Parses a date string into a year-month format.
     @param d Date string to parse
-    @return Result containing the first 7 characters (YYYY-MM) or error *)
-let parse_date d = Ok (String.sub d 0 7)
+    @return Result containing the first 7 characters (YYYY-MM) if valid, or an error string *)
+let parse_date d =
+  if String.length d < 7 then
+    Error (Printf.sprintf "Date too short: %s (expected at least 7 characters)" d)
+  else
+    let prefix = String.sub d 0 7 in
+    let is_digit c = c >= '0' && c <= '9' in
+    let valid_format =
+      String.length prefix = 7 &&
+      is_digit prefix.[0] && is_digit prefix.[1] &&
+      is_digit prefix.[2] && is_digit prefix.[3] &&
+      prefix.[4] = '-' &&
+      is_digit prefix.[5] && is_digit prefix.[6]
+    in
+    if valid_format then Ok prefix
+    else Error (Printf.sprintf "Invalid date YEAR_MONTH format: %s (expected YYYY-MM)" prefix)
 
 (** Parses a status string into a Status variant.
     @param s Status string to parse
