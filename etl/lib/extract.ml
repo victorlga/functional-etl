@@ -1,6 +1,19 @@
 (** Bind operator for Result monad *)
 let ( let* ) = Result.bind
 
+(** Reads a list of strings from user input until an empty line is entered.
+    @param prompt The prompt to display to the user before input
+    @return A list of strings entered by the user in reverse order of input *)
+let get_list_from_user prompt =
+  print_string prompt;
+  flush stdout;
+  let rec loop acc =
+    let input = input_line stdin in
+    if input = "" then List.rev acc
+    else loop (input :: acc)
+  in
+  loop []
+
 (** Extracts CSV data from a file.
     @param filepath Path to the CSV file to be loaded
     @return Result containing CSV data on success or error string on failure *)
