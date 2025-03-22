@@ -1,6 +1,9 @@
+(** Bind operator for Result monad *)
 let ( let* ) = Result.bind
 
-
+(** Extracts CSV data from a file.
+    @param filepath Path to the CSV file to be loaded
+    @return Result containing CSV data on success or error string on failure *)
 let extract_csv_from_file filepath =
   try
     let data = Csv.Rows.load ~has_header:true filepath in
@@ -8,9 +11,10 @@ let extract_csv_from_file filepath =
   with
   | exn -> Error (Printexc.to_string exn)
 
-(**
+(** Performs an HTTP GET request to retrieve content from a URL.
     @author Source: OCaml Cookbook (https://ocaml.org/cookbook/http-get-request/cohttp-lwt-unix)
-*)
+    @param url The URL to fetch data from
+    @return Lwt promise resolving to Result with response body string on success or error message on failure *)
 let http_get url =
   let ( let* ) = Lwt.bind in
   let* (resp, body) =
@@ -28,7 +32,10 @@ let http_get url =
       Cohttp.Code.reason_phrase_of_code code
     ))
 
-
+(** Downloads CSV data from a web URL and saves it to a local file.
+    @param url Base URL for the data source
+    @param filepath Local file path where CSV will be saved
+    @return Result indicating success (Ok ()) or failure (Error string) *)
 let get_and_load_csv_from_web url filepath =
   let ( let* ) = Lwt.bind in
   Lwt_main.run (
@@ -45,7 +52,10 @@ let get_and_load_csv_from_web url filepath =
         Lwt.return (Ok ())
   )
 
-
+(** Extracts data from CSV files, downloading them from the web if necessary.
+    @param filepaths Tuple of file paths (orders_filepath, order_items_filepath)
+    @return Result containing tuple of orders and order_items CSV data on success,
+            or error string on failure *)
 let extract filepaths =
   let (orders_filepath, order_items_filepath) = filepaths in
   let url = "https://raw.githubusercontent.com/victorlga/etl-ocaml/refs/heads/main/" in
@@ -54,4 +64,3 @@ let extract filepaths =
   let* orders = extract_csv_from_file orders_filepath in
   let* order_items = extract_csv_from_file order_items_filepath in
   Ok (orders, order_items)
-
