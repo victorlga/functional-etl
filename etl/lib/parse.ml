@@ -18,10 +18,10 @@ let parse_origin = function
   | s -> Error (Printf.sprintf "Unknown origin: %s" s)
 
 
-let parse_number number_of_string raw field =
+let parse_number number_of_string field raw  =
   raw
   |> number_of_string
-  |> Option.to_result ~none: (Printf.sprintf "Invalid %s" field)
+  |> Option.to_result ~none: (Printf.sprintf "Invalid %s: %s" field raw)
 
 
 let parse_int = parse_number int_of_string_opt
