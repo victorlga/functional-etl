@@ -1,169 +1,148 @@
 open Types
 
-(**
-    Writes order total records to a CSV file.
-    
-    @param filepath The path to the output CSV file.
-    @param records A list of records containing order_id, total_amount, and total_tax.
-    @raise Sys_error If the file cannot be opened or written to.
-    @raise Failure If an error occurs during writing, after ensuring the file is properly closed.
-    @author Adapted from https://grok.com generated code.
-*)
+let ( let* ) = Result.bind
+
+(* Feito com o GROK *)
+let with_output_channel filepath f =
+  let oc = open_out filepath in
+  Fun.protect ~finally:(fun () -> close_out oc) (fun () -> f oc)
+
+
+let write_csv header to_row items filepath =
+  with_output_channel filepath (fun oc ->
+    output_string oc header;
+    List.iter (fun item -> output_string oc (to_row item ^ "\n")) items)
+
+
 let write_order_totals_to_csv order_totals filepath =
   let header = "order_id,total_amount,total_tax\n" in
-  let oc = open_out filepath in
-  try
-    output_string oc header;
-    List.iter
-      (fun order_total ->
-        let row =
-          String.concat ","
-            [
-              string_of_int order_total.order_id;
-              string_of_float order_total.total_amount;
-              string_of_float order_total.total_tax;
-            ]
-        in
-        output_string oc (row ^ "\n"))
-      order_totals;
-    close_out oc
-  with e ->
-    close_out oc;
-    raise e
+  let to_row ot = 
+    Printf.sprintf "%d,%.2f,%.2f"
+      ot.order_id
+      ot.total_amount
+      ot.total_tax
+  in
+  write_csv header to_row order_totals filepath;
+  Ok "Order totals CSV written successfully"
+
 
 let write_financial_records_to_csv financial_records filepath =
-  let header = "period,revenue,tax\n" in
-  let oc = open_out filepath in
-  try
-    output_string oc header;
-    List.iter
-      (fun fin_record ->
-        let row =
-          String.concat ","
-            [
-              fin_record.period;
-              string_of_float fin_record.revenue;
-              string_of_float fin_record.tax;
-            ]
-        in
-        output_string oc (row ^ "\n"))
-        financial_records;
-    close_out oc
-  with e ->
-    close_out oc;
-    raise e
-
-(**
-    Creates or drops and recreates the order_totals table in the SQLite database.
-    
-    @param db The SQLite database connection.
-    @return Unit (side effect: creates table or prints error).
-    @raise Sqlite3.Error If the table creation query fails unexpectedly.
-*)
-let create_order_totals_table db =
-  let drop_table_sql = "DROP TABLE IF EXISTS order_totals" in
-  ignore(Sqlite3.exec db drop_table_sql);
-
-  let create_table_sql = 
-    "CREATE TABLE order_totals (order_id INTEGER PRIMARY KEY, total_amount REAL, total_tax REAL)" 
+  let header = "order_id,total_amount,total_tax\n" in
+  let to_row fr = 
+    Printf.sprintf "%s,%.2f,%.2f"
+      fr.period
+      fr.revenue
+      fr.tax
   in
-  match Sqlite3.exec db create_table_sql with
-  | Sqlite3.Rc.OK -> print_endline "Table order_totals created successfully"
-  | _ -> print_endline "Failed to create order_totals table"
+  write_csv header to_row financial_records filepath;
+  Ok "Financial records CSV written successfully"
 
 
-(**
-    Inserts a single order total into the order_totals table.
-    
-    @param db The SQLite database connection.
-    @param order_total The order total record to insert, containing order_id, total_amount, and total_tax.
-    @return Unit (side effect: inserts data or raises an exception).
-    @raise Failure If the insert operation fails.
-    @raise Sqlite3.Error If SQLite binding or stepping fails unexpectedly.
-*)
+let create_table db table_name drop_sql create_sql =
+  ignore (Sqlite3.exec db drop_sql);
+  match Sqlite3.exec db create_sql with
+  | Sqlite3.Rc.OK -> Ok (Printf.sprintf "Table %s created" table_name)
+  | rc -> Error (Printf.sprintf "Failed to create %s: %s" 
+                  table_name (Sqlite3.Rc.to_string rc))
+
+
+(* Feito com o GROK *)
+let with_transaction db f =
+  Sqlite3.exec db "BEGIN TRANSACTION" |> ignore;
+  try
+    let result = f db in
+    Sqlite3.exec db "COMMIT" |> ignore;
+    Ok result
+  with e ->
+    Sqlite3.exec db "ROLLBACK" |> ignore;
+    Error (Printexc.to_string e)
+
+
+let create_order_totals_table db =
+  let drop_sql = "DROP TABLE IF EXISTS order_totals" in
+  let create_sql = 
+    "CREATE TABLE order_totals (order_id INTEGER PRIMARY KEY, total_amount REAL, total_tax REAL)"
+  in
+  create_table db "order_totals" drop_sql create_sql
+
+
 let insert_order_total db order_total =
   let insert_sql = 
-    "INSERT INTO order_totals (order_id, total_amount, total_tax) VALUES (?, ?, ?)" 
+    "INSERT INTO order_totals (order_id, total_amount, total_tax) VALUES (?, ?, ?)"
   in
   let stmt = Sqlite3.prepare db insert_sql in
   ignore (Sqlite3.bind stmt 1 (Sqlite3.Data.INT (Int64.of_int order_total.order_id)));
   ignore (Sqlite3.bind stmt 2 (Sqlite3.Data.FLOAT order_total.total_amount));
   ignore (Sqlite3.bind stmt 3 (Sqlite3.Data.FLOAT order_total.total_tax));
   match Sqlite3.step stmt with
-  | Sqlite3.Rc.DONE -> ignore (Sqlite3.finalize stmt);
+  | Sqlite3.Rc.DONE -> 
+      ignore (Sqlite3.finalize stmt);
+      Ok ()
   | rc -> 
-      ignore (Sqlite3.finalize stmt); 
-      Printf.printf "Insert failed with code %s: %s\n" 
-        (Sqlite3.Rc.to_string rc) (Sqlite3.errmsg db);
-      failwith "Insert failed"
+      ignore (Sqlite3.finalize stmt);
+      Error (Printf.sprintf "Insert failed with code %s: %s"
+              (Sqlite3.Rc.to_string rc) (Sqlite3.errmsg db))
 
 
-(**
-    Writes a list of order totals to a SQLite database.
-    
-    @param order_totals List of order total records to write.
-    @param db_name The name of the SQLite database file.
-    @return Unit (side effect: creates table and inserts data).
-    @raise Failure If any insert operation fails.
-    @raise Sqlite3.Error If database operations fail unexpectedly.
-*)
 let write_order_totals_to_sqlite order_totals db_name =
   let db = Sqlite3.db_open db_name in
-  create_order_totals_table db;
-  List.iter (insert_order_total db) order_totals;
-  print_endline "Order totals inserted successfully";
-  ignore (Sqlite3.db_close db)
+  Fun.protect ~finally:(fun () -> ignore (Sqlite3.db_close db)) (fun () ->
+    with_transaction db (fun db ->
+      match create_order_totals_table db with
+      | Error e -> Error e
+      | Ok _ ->
+          let results = List.map (insert_order_total db) order_totals in
+          if List.exists Result.is_error results
+          then Error "Some order total insertions failed"
+          else Ok "Order totals inserted successfully"
+    ))
 
 
 let create_financial_records_table db =
-  let drop_table_sql = "DROP TABLE IF EXISTS financial_records" in
-  ignore(Sqlite3.exec db drop_table_sql);
-
-  let create_table_sql = 
-    "CREATE TABLE financial_records (period STRING PRIMARY KEY, revenue REAL, tax REAL)" 
+  let drop_sql = "DROP TABLE IF EXISTS financial_records" in
+  let create_sql = 
+    "CREATE TABLE financial_records (period STRING PRIMARY KEY, revenue REAL, tax REAL)"
   in
-  match Sqlite3.exec db create_table_sql with
-  | Sqlite3.Rc.OK -> print_endline "\nTable financial_records created successfully"
-  | _ -> print_endline "Failed to create financial_records table"
+  create_table db "financial_records" drop_sql create_sql
 
 
 let insert_financial_record db financial_record =
   let insert_sql = 
-    "INSERT INTO financial_records (period, revenue, tax) VALUES (?, ?, ?)" 
+    "INSERT INTO financial_records (period, revenue, tax) VALUES (?, ?, ?)"
   in
   let stmt = Sqlite3.prepare db insert_sql in
   ignore (Sqlite3.bind stmt 1 (Sqlite3.Data.TEXT financial_record.period));
   ignore (Sqlite3.bind stmt 2 (Sqlite3.Data.FLOAT financial_record.revenue));
   ignore (Sqlite3.bind stmt 3 (Sqlite3.Data.FLOAT financial_record.tax));
+
   match Sqlite3.step stmt with
-  | Sqlite3.Rc.DONE -> ignore (Sqlite3.finalize stmt);
+  | Sqlite3.Rc.DONE -> 
+      ignore (Sqlite3.finalize stmt);
+      Ok ()
   | rc -> 
-      ignore (Sqlite3.finalize stmt); 
-      Printf.printf "Insert failed with code %s: %s\n" 
-        (Sqlite3.Rc.to_string rc) (Sqlite3.errmsg db);
-      failwith "Insert failed"
+      ignore (Sqlite3.finalize stmt);
+      Error (Printf.sprintf "Insert failed with code %s: %s"
+              (Sqlite3.Rc.to_string rc) (Sqlite3.errmsg db))
 
 
 let write_financial_records_to_sqlite financial_records db_name =
   let db = Sqlite3.db_open db_name in
-  create_financial_records_table db;
-  List.iter (insert_financial_record db) financial_records;
-  print_endline "Financiel records inserted successfully";
-  ignore (Sqlite3.db_close db)
+  Fun.protect ~finally:(fun () -> ignore (Sqlite3.db_close db)) (fun () ->
+    with_transaction db (fun db ->
+      match create_financial_records_table db with
+      | Error e -> Error e
+      | Ok _ ->
+          let results = List.map (insert_financial_record db) financial_records in
+          if List.exists Result.is_error results
+          then Error "Some financial record insertions failed"
+          else Ok "Financial records inserted successfully"))
 
 
-(**
-    Saves order total records to a CSV file.
-    
-    @param order_totals A list of order total records.
-    @param filepath The path to the output CSV file.
-    @raise Sys_error If file operations fail.
-    @raise Failure If an error occurs during writing.
-*)
 let load result filepaths =
   let (order_totals, financial_records) = result in
   let (ot_filepath, fr_filepath) = filepaths in
-  write_order_totals_to_csv order_totals (ot_filepath ^ ".csv") ;
-  write_order_totals_to_sqlite order_totals (ot_filepath ^ ".sqlite") ;
-  write_financial_records_to_csv financial_records (fr_filepath ^ ".csv") ;
-  write_financial_records_to_sqlite financial_records (fr_filepath ^ ".sqlite") ;
+  let* _ = write_order_totals_to_csv order_totals (ot_filepath ^ ".csv") in
+  let* _ = write_financial_records_to_csv financial_records (fr_filepath ^ ".csv") in
+  let* _ = write_order_totals_to_sqlite order_totals (ot_filepath ^ ".sqlite") in
+  let* _ = write_financial_records_to_sqlite financial_records (fr_filepath ^ ".sqlite") in
+  Ok ()
