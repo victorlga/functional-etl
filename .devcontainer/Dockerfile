@@ -28,6 +28,7 @@ RUN opam switch 5.3 --yes && \
     cohttp \
     cohttp-lwt-unix \
     lwt_ssl \
+    ounit2 \
     sqlite3.5.1.0 && \
     dune init proj etl
 
