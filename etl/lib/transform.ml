@@ -74,6 +74,7 @@ let compute_order_totals orders_with_items =
     update_order_totals aux o_w_i
   ) OrderTotalMap.empty orders_with_items 
   |> order_total_map_to_list
+  |> List.rev
 
 (** Updates financial records in a map with a new order_with_item.
     @param aux Existing FinRecordMap
