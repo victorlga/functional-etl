@@ -5,22 +5,27 @@
 (generate_opam_files true)
 
 (source
- (github username/reponame))
+ (github victorlga/etl-ocaml))
 
-(authors "Author Name <author@example.com>")
+(authors "Victor Assis <victor@example.com>")
 
-(maintainers "Maintainer Name <maintainer@example.com>")
+(maintainers "Victor Assis <victor@example.com>")
 
-(license LICENSE)
+(license MIT)
 
-(documentation https://url/to/documentation)
+(documentation https://victorlga.github.io/etl-ocaml)
 
 (package
  (name etl)
- (synopsis "A short synopsis")
- (description "A longer description")
- (depends ocaml)
+ (synopsis "An ETL pipeline implemented in OCaml")
+ (description "A robust Extract, Transform, Load (ETL) pipeline written in OCaml, designed to process order data from CSV files, transform it based on user-specified criteria, and load results into CSV and SQLite formats.")
+ (depends 
+  ocaml
+  dune
+  odoc
+  csv
+  sqlite3
+  cohttp-lwt-unix
+  lwt)
  (tags
-  ("add topics" "to describe" your project)))
-
-; See the complete stanza docs at https://dune.readthedocs.io/en/stable/reference/dune-project/index.html
+  ("etl" "ocaml" "data-processing" "csv" "sqlite")))
