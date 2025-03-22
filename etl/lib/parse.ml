@@ -20,7 +20,7 @@ let parse_date d =
       is_digit prefix.[5] && is_digit prefix.[6]
     in
     if valid_format then Ok prefix
-    else Error (Printf.sprintf "Invalid date YEAR_MONTH format: %s (expected YYYY-MM)" prefix)
+    else Error (Printf.sprintf "Invalid date format: %s (expected YYYY-MM-DDTHH:mm:SS)" prefix)
 
 (** Parses a status string into a Status variant.
     @param s Status string to parse
