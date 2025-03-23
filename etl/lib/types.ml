@@ -32,7 +32,7 @@ type order_item = {
 }
 
 (** Represents a combined order and item record for processing *)
-type order_with_item = {
+type item_joined_order = {
   order_id : int;  (** ID of the order *)
   date : string;   (** Date of the order in YYYY-MM format *)
   status : status; (** Current status of the order *)

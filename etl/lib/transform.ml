@@ -21,7 +21,7 @@ let filter_orders_by_origins orders origins =
 (** Performs an inner join between orders and order items.
     @param orders List of order records
     @param order_items List of order item records
-    @return List of combined order_with_item records *)
+    @return List of combined item_joined_order records *)
 let inner_join_orders_items orders order_items =
   List.concat_map (fun order ->
     List.filter_map (fun (item: order_item) ->
@@ -41,22 +41,22 @@ let inner_join_orders_items orders order_items =
   ) orders
 
 (** Computes the total amount for an order with item.
-    @param o_w_i Order_with_item record
+    @param join item_joined_order record
     @return Float representing the total amount (price * quantity) *)
-let compute_amount o_w_i =
-  o_w_i.price *. float_of_int o_w_i.quantity
+let compute_amount join =
+  join.price *. float_of_int join.quantity
 
-(** Updates order totals in a map with a new order_with_item.
+(** Updates order totals in a map with a new item_joined_order.
     @param aux Existing OrderTotalMap
-    @param o_w_i Order_with_item record to process
+    @param join item_joined_order record to process
     @return Updated OrderTotalMap with new totals *)
-let update_order_totals aux (o_w_i : order_with_item) =
-  let prev_values = OrderTotalMap.find_opt o_w_i.order_id aux |> Option.value ~default:(0.0, 0.0) in
+let update_order_totals aux (join : item_joined_order) =
+  let prev_values = OrderTotalMap.find_opt join.order_id aux |> Option.value ~default:(0.0, 0.0) in
   let prev_amount, prev_tax = prev_values in
-  let amount = compute_amount o_w_i in
+  let amount = compute_amount join in
   let total_amount = prev_amount +. amount in
-  let total_tax = prev_tax +. amount *. o_w_i.tax in
-  OrderTotalMap.add o_w_i.order_id (total_amount, total_tax) aux
+  let total_tax = prev_tax +. amount *. join.tax in
+  OrderTotalMap.add join.order_id (total_amount, total_tax) aux
 
 (** Converts an OrderTotalMap to a list of order_total records.
     @param map OrderTotalMap containing total amounts and taxes
@@ -67,26 +67,26 @@ let order_total_map_to_list map =
   ) map []
 
 (** Computes order totals from a list of orders with items.
-    @param orders_with_items List of order_with_item records
+    @param items_joined_orders List of item_joined_order records
     @return List of computed order_total records *)
-let compute_order_totals orders_with_items =
-  List.fold_left (fun aux o_w_i ->
-    update_order_totals aux o_w_i
-  ) OrderTotalMap.empty orders_with_items 
+let compute_order_totals items_joined_orders =
+  List.fold_left (fun aux join ->
+    update_order_totals aux join
+  ) OrderTotalMap.empty items_joined_orders 
   |> order_total_map_to_list
   |> List.rev
 
-(** Updates financial records in a map with a new order_with_item.
+(** Updates financial records in a map with a new item_joined_order.
     @param aux Existing FinRecordMap
-    @param o_w_i Order_with_item record to process
+    @param join item_joined_order record to process
     @return Updated FinRecordMap with new financial totals *)
-let update_financial_records aux (o_w_i : order_with_item) =
-  let prev_values = FinRecordMap.find_opt o_w_i.date aux |> Option.value ~default:(0.0, 0.0) in
+let update_financial_records aux (join : item_joined_order) =
+  let prev_values = FinRecordMap.find_opt join.date aux |> Option.value ~default:(0.0, 0.0) in
   let prev_revenue, prev_tax = prev_values in
-  let amount = compute_amount o_w_i in
+  let amount = compute_amount join in
   let total_revenue = prev_revenue +. amount in
-  let total_tax = prev_tax +. amount *. o_w_i.tax in
-  FinRecordMap.add o_w_i.date (total_revenue, total_tax) aux
+  let total_tax = prev_tax +. amount *. join.tax in
+  FinRecordMap.add join.date (total_revenue, total_tax) aux
 
 (** Converts a FinRecordMap to a list of financial_record records.
     @param map FinRecordMap containing revenue and tax data
@@ -97,12 +97,12 @@ let financial_record_map_to_list map =
   ) map []
 
 (** Computes financial records from a list of orders with items.
-    @param orders_with_items List of order_with_item records
+    @param items_joined_orders List of item_joined_order records
     @return Sorted list of financial_record records (most recent first) *)
-let compute_financial_records orders_with_items =
-  List.fold_left (fun aux o_w_i ->
-    update_financial_records aux o_w_i
-  ) FinRecordMap.empty orders_with_items
+let compute_financial_records items_joined_orders =
+  List.fold_left (fun aux join ->
+    update_financial_records aux join
+  ) FinRecordMap.empty items_joined_orders
   |> financial_record_map_to_list
   |> List.sort (fun r1 r2 -> String.compare r1.period r2.period)
   |> List.rev
@@ -128,7 +128,7 @@ let transform data criterias =
   let (raw_orders, raw_order_items) = data in
   let* filtered_orders = parse_and_filter_orders raw_orders criterias in
   let* order_items = parse_order_item_list raw_order_items in
-  let orders_with_items = inner_join_orders_items filtered_orders order_items in
-  let order_totals = compute_order_totals orders_with_items in
-  let financial_records = compute_financial_records orders_with_items in
+  let items_joined_orders = inner_join_orders_items filtered_orders order_items in
+  let order_totals = compute_order_totals items_joined_orders in
+  let financial_records = compute_financial_records items_joined_orders in
   Ok (order_totals, financial_records)
