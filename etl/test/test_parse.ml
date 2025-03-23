@@ -76,7 +76,7 @@ let mock_parser s =
   else
     Error (Printf.sprintf "Failed to parse: %s" s)
 
-let test_parse_list_all_valid _ =
+let test_parse_list _ =
   let inputs = ["okA"; "okB"; "okC"] in
   let result = parse_list mock_parser inputs in
   assert_equal (Ok ["A"; "B"; "C"]) result
@@ -112,7 +112,7 @@ let suite =
     "parse_date with invalid separator" >:: test_parse_date_invalid_separator ;
     "parse_date with invalid order" >:: test_parse_date_invalid_order ;
     "parse_date with invalid format" >:: test_parse_date_invalid_format ;
-    "parse_list with all valid inputs" >:: test_parse_list_all_valid ;
+    "parse_list with all valid inputs" >:: test_parse_list ;
     "parse_list with one invalid input" >:: test_parse_list_with_invalid ;
     "parse_list with empty list" >:: test_parse_list_empty ;
   ]
