@@ -119,8 +119,7 @@ let compute_financial_records items_joined_orders =
     update_financial_records aux join
   ) FinRecordMap.empty items_joined_orders
   |> financial_record_map_to_list
-  |> List.sort (fun r1 r2 -> String.compare r1.period r2.period)
-  |> List.rev
+  |> List.sort (fun r1 r2 -> String.compare r2.period r1.period)
 
 (** Parses raw orders and filters them by criteria.
     @param raw_orders List of raw CSV rows for orders
