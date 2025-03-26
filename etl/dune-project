@@ -5,11 +5,9 @@
 (generate_opam_files true)
 
 (source
- (github victorlga/etl-ocaml))
+ (github victorlga/functional-etl))
 
-(authors "Victor Assis <victor@example.com>")
-
-(maintainers "Victor Assis <victor@example.com>")
+(authors "Victor Assis <victorluisgassis@gmail.com>")
 
 (license MIT)
 
