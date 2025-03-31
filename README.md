@@ -66,7 +66,7 @@ order_id,total_amount,total_taxes
 - [x] Separate **impure** functions from **pure** functions in different project files.  **MADE WITH GROK**
 - [x] The input data must be loaded into a **list of records**.  
 - [x] It is mandatory to use **helper functions** to load the fields into a record.  
-- [ ] A project **report** must be written, detailing how each step was implemented. This should serve as a guide for someone looking to recreate the project in the future. The report must also state whether **generative AI** was used or not.
+- [x] A project **report** must be written, detailing how each step was implemented. This should serve as a guide for someone looking to recreate the project in the future. The report must also state whether **generative AI** was used or not.
 
 ### Optional requirements
 
