@@ -6,6 +6,7 @@
     - [Output](#output)
     - [Basic requirements](#basic-requirements)
     - [Optional requirements](#optional-requirements)
+  - [Step-by-step development guide](#step-by-step-development-guide)
   - [How to run](#how-to-run)
     - [Prerequisites](#prerequisites)
     - [Setting Up the Development Container](#setting-up-the-development-container)
@@ -76,6 +77,9 @@ order_id,total_amount,total_taxes
 - [x] Document all functions using the **docstring format**.  **MADE WITH GROK**
 - [x] Produce an additional output with **average revenue and taxes paid**, grouped by **month and year**.
 - [x] Generate **comprehensive test files** for all **pure functions**.
+
+## Step-by-step development guide
+To learn how to build from scratch the Functional-ETL project follow [this guide](how-to-build-functional-etl.pdf).
 
 ## How to run
 
