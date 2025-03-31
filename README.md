@@ -1,14 +1,19 @@
-# Functional ETL project instructions
+# Functional ETL
 
-- [Functional ETL project instructions](#functional-etl-project-instructions)
-  - [Input](#input)
-  - [Output](#output)
-  - [Basic requirements](#basic-requirements)
-  - [Optional requirements](#optional-requirements)
-- [How to run](#how-to-run)
-  - [Prerequisites](#prerequisites)
-  - [Setting Up the Development Container](#setting-up-the-development-container)
-  - [Building and Running the Project](#building-and-running-the-project)
+- [Functional ETL](#functional-etl)
+  - [Project instructions](#project-instructions)
+    - [Input](#input)
+    - [Output](#output)
+    - [Basic requirements](#basic-requirements)
+    - [Optional requirements](#optional-requirements)
+  - [How to run](#how-to-run)
+    - [Prerequisites](#prerequisites)
+    - [Setting Up the Development Container](#setting-up-the-development-container)
+    - [Building and Running the Project](#building-and-running-the-project)
+
+## Project instructions
+
+
 
 The goal of this ETL project is to process data from a source (a CSV file), apply transformations, and store the result in another resource (a new CSV file).  
 
@@ -18,7 +23,7 @@ In a real-world scenario, direct access to the database may be impractical due t
 
 The final objective is to provide the processed data to the manager, who will use this information to feed a dashboard for aggregated order visualization.
 
-## Input
+### Input
 
 Daily, two files will be available for processing.  
 
@@ -32,7 +37,7 @@ Additionally, the table includes the **quantity**, the price paid at the time of
 
 The **Clients** and **Products** tables are not provided, as they are not relevant for the aggregated order visualization dashboard.
 
-## Output
+### Output
 
 The manager would like to receive a CSV file containing three fields: **order_id**, **total_amount**, and **total_taxes**.  
 
@@ -52,7 +57,7 @@ order_id,total_amount,total_taxes
 14,334.44,30.4  
 ```
 
-## Basic requirements
+### Basic requirements
 
 - [x] The project must be implemented in **OCaml**.  
 - [x] To compute the output, it is required to use **map**, **reduce**, and **filter**.  
@@ -62,7 +67,7 @@ order_id,total_amount,total_taxes
 - [x] It is mandatory to use **helper functions** to load the fields into a record.  
 - [ ] A project **report** must be written, detailing how each step was implemented. This should serve as a guide for someone looking to recreate the project in the future. The report must also state whether **generative AI** was used or not.
 
-## Optional requirements
+### Optional requirements
 
 - [x] Read the input data from a static file available on the internet (exposed via HTTP).  
 - [x] Save the output data in an **SQLite database**.
@@ -72,14 +77,14 @@ order_id,total_amount,total_taxes
 - [x] Produce an additional output with **average revenue and taxes paid**, grouped by **month and year**.
 - [x] Generate **comprehensive test files** for all **pure functions**.
 
-# How to run
+## How to run
 
-## Prerequisites
+### Prerequisites
 - Docker
 - Visual Studio Code with the Remote - Containers extension
 - Internet connection
 
-## Setting Up the Development Container
+### Setting Up the Development Container
 1. Clone the repository:
    ```bash
    git clone https://github.com/victorlga/functional-etl
@@ -95,7 +100,7 @@ order_id,total_amount,total_taxes
    opam update
    ```
 
-## Building and Running the Project
+### Building and Running the Project
 1. Navigate to the ETL directory:
    ```bash
    cd functional-etl/etl
