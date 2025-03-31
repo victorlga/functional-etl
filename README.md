@@ -1,4 +1,14 @@
-# ETL-OCaml
+# Functional ETL project instructions
+
+- [Functional ETL project instructions](#functional-etl-project-instructions)
+  - [Input](#input)
+  - [Output](#output)
+  - [Basic requirements](#basic-requirements)
+  - [Optional requirements](#optional-requirements)
+- [How to run](#how-to-run)
+  - [Prerequisites](#prerequisites)
+  - [Setting Up the Development Container](#setting-up-the-development-container)
+  - [Building and Running the Project](#building-and-running-the-project)
 
 The goal of this ETL project is to process data from a source (a CSV file), apply transformations, and store the result in another resource (a new CSV file).  
 
@@ -60,5 +70,45 @@ order_id,total_amount,total_taxes
 - [x] Organize the ETL project using **Dune**.
 - [x] Document all functions using the **docstring format**.  **MADE WITH GROK**
 - [x] Produce an additional output with **average revenue and taxes paid**, grouped by **month and year**.
-- [ ] Generate **comprehensive test files** for all **pure functions**.
-- [ ] Use ocamldocs to generate documentation
+- [x] Generate **comprehensive test files** for all **pure functions**.
+
+# How to run
+
+## Prerequisites
+- Docker
+- Visual Studio Code with the Remote - Containers extension
+- Internet connection
+
+## Setting Up the Development Container
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/victorlga/functional-etl
+   cd functional-etl
+   ```
+
+2. Open the project in VS Code and reopen in the container:
+   - Press `F1` and select **Dev Containers: Rebuild and Reopen in Container**.
+   - VS Code will automatically build the container based on `.devcontainer/devcontainer.json`.
+
+3. Once inside the container, update Opam:
+   ```bash
+   opam update
+   ```
+
+## Building and Running the Project
+1. Navigate to the ETL directory:
+   ```bash
+   cd functional-etl/etl
+   ```
+
+2. Build the project:
+   ```bash
+   dune build
+   ```
+
+3. Execute the ETL pipeline:
+   ```bash
+   dune exec etl
+   ```
+
+
