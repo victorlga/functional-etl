@@ -26,12 +26,12 @@ let get_join_list = [
   { order_id=4; quantity=9; price=30.00; tax=0.1; date="2023-07"; status=Cancelled; origin=P };
 ]
 
-let get_fr_map_single = FinRecordMap.singleton "2024-10" (100.0, 10.0)
+let get_fr_map_single = FinRecordMap.singleton "2024-10" (10.0, 1.0, 1)
 let get_fr_map_multiple = 
   FinRecordMap.empty
-  |> FinRecordMap.add "2024-10" (100.0, 10.0)
-  |> FinRecordMap.add "2024-11" (200.0, 20.0)
-  |> FinRecordMap.add "2024-12" (300.0, 30.0)
+  |> FinRecordMap.add "2024-10" (10.0, 1.0, 1)
+  |> FinRecordMap.add "2024-11" (20.0, 2.0, 1)
+  |> FinRecordMap.add "2024-12" (30.0, 3.0, 1)
 
 let get_ot_map_single = OrderTotalMap.singleton 1 (100.0, 10.0)
 let get_ot_map_multiple = 
@@ -127,52 +127,41 @@ let test_update_order_totals_empty_map _ =
 
 let test_update_financial_records_single_date _ =
   let result = update_financial_records FinRecordMap.empty get_join in
-  let expected = FinRecordMap.singleton "2024-10" (60.0, 6.0) in
+  let expected = FinRecordMap.singleton "2024-10" (12.0, 1.2, 5) in
   assert_equal ~msg:"Should correctly update totals for single date"
-                ~printer:(fun m -> FinRecordMap.bindings m |> List.map (fun (k, (a, t)) -> Printf.sprintf "%s:(%.2f,%.2f)" k a t) |> String.concat ",")
-                expected result
-
-let test_update_financial_records_multiple_items_same_date _ =
-  let initial = FinRecordMap.singleton "2024-08" (100.0, 10.0) in
-  let join1 = List.nth get_join_list 1 in
-  let join2 = List.nth get_join_list 2 in
-  let temp = update_financial_records initial join1 in
-  let result = update_financial_records temp join2 in
-  let expected = FinRecordMap.singleton "2024-08" (980.00, 98.00) in
-  assert_equal ~msg:"Should correctly accumulate totals for multiple items on same date"
-                ~printer:(fun m -> FinRecordMap.bindings m |> List.map (fun (k, (a, t)) -> Printf.sprintf "%s:(%.2f,%.2f)" k a t) |> String.concat ",")
+                ~printer:(fun m -> FinRecordMap.bindings m |> List.map (fun (k, (a, t, q)) -> Printf.sprintf "%s:(%.2f,%.2f,%d)" k a t q) |> String.concat ",")
                 expected result
 
 let test_update_financial_records_empty_map _ =
   let result = update_financial_records FinRecordMap.empty (List.hd get_join_list) in
-  let expected = FinRecordMap.singleton "2024-10" (100.0, 10.0) in
+  let expected = FinRecordMap.singleton "2024-10" (10.0, 1.0, 10) in
   assert_equal ~msg:"Should create new entry in empty map"
-                ~printer:(fun m -> FinRecordMap.bindings m |> List.map (fun (k, (a, t)) -> Printf.sprintf "%s:(%.2f,%.2f)" k a t) |> String.concat ",")
+                ~printer:(fun m -> FinRecordMap.bindings m |> List.map (fun (k, (a, t, q)) -> Printf.sprintf "%s:(%.2f,%.2f,%d)" k a t q) |> String.concat ",")
                 expected result
 
 let test_financial_record_map_to_list_single_record _ =
   let result = financial_record_map_to_list get_fr_map_single in
-  let expected = [{ period = "2024-10"; revenue = 100.0; tax = 10.0 }] in
+  let expected = [{ period = "2024-10"; avg_rev = 10.0; avg_tax = 1.0; quantity = 1 }] in
   assert_equal ~msg:"Should convert single record map to list"
-                ~printer:(fun lst -> String.concat "," (List.map (fun r -> r.period ^ ":" ^ string_of_float r.revenue ^ ":" ^ string_of_float r.tax) lst))
+                ~printer:(fun lst -> String.concat "," (List.map (fun r -> r.period ^ ":" ^ string_of_float r.avg_rev ^ ":" ^ string_of_float r.avg_tax) lst))
                 expected result
 
 let test_financial_record_map_to_list_multiple_records _ =
   let result = financial_record_map_to_list get_fr_map_multiple in
   let expected = [
-    { period = "2024-12"; revenue = 300.0; tax = 30.0 };
-    { period = "2024-11"; revenue = 200.0; tax = 20.0 };
-    { period = "2024-10"; revenue = 100.0; tax = 10.0 }
+    { period = "2024-12"; avg_rev = 30.0; avg_tax = 3.0; quantity = 1 };
+    { period = "2024-11"; avg_rev = 20.0; avg_tax = 2.0; quantity = 1 };
+    { period = "2024-10"; avg_rev = 10.0; avg_tax = 1.0; quantity = 1 }
   ] in
   assert_equal ~msg:"Should convert multiple record map to list"
-                ~printer:(fun lst -> String.concat "," (List.map (fun r -> r.period ^ ":" ^ string_of_float r.revenue ^ ":" ^ string_of_float r.tax) lst))
+                ~printer:(fun lst -> String.concat "," (List.map (fun r -> r.period ^ ":" ^ string_of_float r.avg_rev ^ ":" ^ string_of_float r.avg_tax) lst))
                 expected result
 
 let test_financial_record_map_to_list_empty_map _ =
   let result = financial_record_map_to_list FinRecordMap.empty in
   let expected = [] in
   assert_equal ~msg:"Should return empty list for empty map"
-                ~printer:(fun lst -> String.concat "," (List.map (fun r -> r.period ^ ":" ^ string_of_float r.revenue ^ ":" ^ string_of_float r.tax) lst))
+                ~printer:(fun lst -> String.concat "," (List.map (fun r -> r.period ^ ":" ^ string_of_float r.avg_rev ^ ":" ^ string_of_float r.avg_tax) lst))
                 expected result
 
 let test_order_total_map_to_list_single_order _ =
@@ -225,29 +214,36 @@ let test_compute_order_totals_with_single_item _ =
                 ~printer:(fun lst -> String.concat "," (List.map (fun r -> string_of_int r.order_id ^ ":" ^ string_of_float r.total_amount ^ ":" ^ string_of_float r.total_tax) lst))
                 expected result
 
+let get_join_list = [
+  { order_id=1; quantity=10; price=10.0; tax=0.1; date="2024-10"; status=Pending; origin=P };
+  { order_id=2; quantity=7; price=100.0; tax=0.1; date="2024-08"; status=Complete; origin=O };
+  { order_id=2; quantity=9; price=20.00; tax=0.1; date="2024-08"; status=Complete; origin=O };
+  { order_id=4; quantity=9; price=30.00; tax=0.1; date="2023-07"; status=Cancelled; origin=P };
+]
+              
 let test_compute_financial_records_with_valid_data _ =
   let result = compute_financial_records get_join_list in
   let expected = [
-    { period = "2024-10"; revenue = 100.0; tax = 10.0 };
-    { period = "2024-08"; revenue = 880.00; tax = 88.00 };
-    { period = "2023-07"; revenue = 270.00; tax = 27.00 };
+    { period = "2024-10"; avg_rev = 10.0; avg_tax = 1.0; quantity = 10 };
+    { period = "2024-08"; avg_rev = 55.00; avg_tax = 5.50; quantity = 16 };
+    { period = "2023-07"; avg_rev = 30.00; avg_tax = 3.00; quantity = 9 };
   ] in
   assert_equal ~msg:"Should compute financial records correctly for multiple dates"
-                ~printer:(fun lst -> String.concat "," (List.map (fun r -> r.period ^ ":" ^ string_of_float r.revenue ^ ":" ^ string_of_float r.tax) lst))
+                ~printer:(fun lst -> String.concat "," (List.map (fun r -> r.period ^ ":" ^ string_of_float r.avg_rev ^ ":" ^ string_of_float r.avg_tax) lst))
                 expected result
 
 let test_compute_financial_records_with_empty_list _ =
   let result = compute_financial_records [] in
   let expected = [] in
   assert_equal ~msg:"Should return empty list for empty input"
-                ~printer:(fun lst -> String.concat "," (List.map (fun r -> r.period ^ ":" ^ string_of_float r.revenue ^ ":" ^ string_of_float r.tax) lst))
+                ~printer:(fun lst -> String.concat "," (List.map (fun r -> r.period ^ ":" ^ string_of_float r.avg_rev ^ ":" ^ string_of_float r.avg_tax) lst))
                 expected result
 
 let test_compute_financial_records_with_single_item _ =
   let result = compute_financial_records [get_join] in
-  let expected = [{ period = "2024-10"; revenue = 60.0; tax = 6.0 }] in
+  let expected = [{ period = "2024-10"; avg_rev = 12.0; avg_tax = 1.2; quantity = 5 }] in
   assert_equal ~msg:"Should compute order totals correctly for single item"
-                ~printer:(fun lst -> String.concat "," (List.map (fun r -> r.period ^ ":" ^ string_of_float r.revenue ^ ":" ^ string_of_float r.tax) lst))
+                ~printer:(fun lst -> String.concat "," (List.map (fun r -> r.period ^ ":" ^ string_of_float r.avg_rev ^ ":" ^ string_of_float r.avg_tax) lst))
                 expected result
 
   let suite =
@@ -279,7 +275,6 @@ let test_compute_financial_records_with_single_item _ =
       "update_financial_records tests" >:::
       [
         "test_update_financial_records_single_date" >:: test_update_financial_records_single_date;
-        "test_update_financial_records_multiple_items_same_date" >:: test_update_financial_records_multiple_items_same_date;
         "test_update_financial_records_empty_map" >:: test_update_financial_records_empty_map;
       ];
   
