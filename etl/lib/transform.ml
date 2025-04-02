@@ -35,42 +35,29 @@ let inner_join_orders_items orders order_items =
     ) order_items
   ) orders
 
-(** Generic function to update a map with totals based on item_joined_order.
-    @param find_opt Map's find_opt function to look up existing values
-    @param add Map's add function to store updated values
-    @param get_key Function to extract the key from item_joined_order
-    @param aux Existing map containing previous totals
-    @param join item_joined_order record with data to process
-    @return Updated map with new calculated totals *)
-let update_totals ~find_opt ~add ~get_key aux (join : item_joined_order) =
-  let prev_values = find_opt (get_key join) aux |> Option.value ~default:(0.0, 0.0) in
-  let prev_amount, prev_tax = prev_values in
-  let amount = join.price *. float_of_int join.quantity in
-  let total_amount = prev_amount +. amount in
-  let total_tax = prev_tax +. amount *. join.tax in
-  add (get_key join) (total_amount, total_tax) aux
-
 (** Updates order totals in a map with a new item_joined_order.
     @param aux Existing OrderTotalMap with previous order totals
     @param join item_joined_order record containing order data to process
     @return Updated OrderTotalMap with new order totals *)
-let update_order_totals aux join =
-  update_totals
-    ~find_opt:OrderTotalMap.find_opt
-    ~add:OrderTotalMap.add
-    ~get_key:(fun j -> j.order_id)
-    aux join
+let update_order_totals aux (join : item_joined_order) =
+  let (prev_amount, prev_tax) = OrderTotalMap.find_opt join.order_id aux |> Option.value ~default:(0.0, 0.0) in
+  let amount = join.price *. float_of_int join.quantity in
+  let total_amount = prev_amount +. amount in
+  let total_tax = prev_tax +. amount *. join.tax in
+  OrderTotalMap.add join.order_id (total_amount, total_tax) aux
 
 (** Updates financial records in a map with a new item_joined_order.
     @param aux Existing FinRecordMap with previous financial totals
     @param join item_joined_order record containing financial data to process
     @return Updated FinRecordMap with new financial totals *)
 let update_financial_records aux join =
-  update_totals
-    ~find_opt:FinRecordMap.find_opt
-    ~add:FinRecordMap.add
-    ~get_key:(fun j -> j.date)
-    aux join
+  let (avg_amount, avg_tax, prev_quantity) = FinRecordMap.find_opt join.date aux |> Option.value ~default:(0.0, 0.0, 0) in
+  let (prev_amount, prev_tax) = (avg_amount *. float_of_int prev_quantity, avg_tax *. float_of_int prev_quantity) in
+  let amount = join.price *. float_of_int join.quantity in
+  let total_amount = prev_amount +. amount in
+  let total_tax = prev_tax +. amount *. join.tax in
+  let quantity = prev_quantity + join.quantity in
+  FinRecordMap.add join.date (total_amount /. float_of_int quantity, total_tax  /. float_of_int quantity, quantity) aux
 
 (** Converts a map to a list of records using a provided conversion function.
     @param fold The fold function for the specific map type
@@ -88,7 +75,7 @@ let map_to_list ~fold ~make_record map =
 let financial_record_map_to_list map =
   map_to_list 
     ~fold:FinRecordMap.fold
-    ~make_record:(fun period (revenue, tax) -> { period; revenue; tax })
+    ~make_record:(fun period (avg_rev, avg_tax, quantity) -> { period; avg_rev; avg_tax; quantity })
     map
 
 (** Converts an OrderTotalMap to a list of order_total records.

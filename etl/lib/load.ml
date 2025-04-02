@@ -46,8 +46,8 @@ let write_financial_records_to_csv financial_records filepath =
   let to_row fr = 
     Printf.sprintf "%s,%.2f,%.2f"
       fr.period
-      fr.revenue
-      fr.tax
+      fr.avg_rev
+      fr.avg_tax
   in
   write_csv header to_row financial_records filepath;
   Ok ()
@@ -146,8 +146,8 @@ let insert_financial_record db financial_record =
   in
   let stmt = Sqlite3.prepare db insert_sql in
   ignore (Sqlite3.bind stmt 1 (Sqlite3.Data.TEXT financial_record.period));
-  ignore (Sqlite3.bind stmt 2 (Sqlite3.Data.FLOAT financial_record.revenue));
-  ignore (Sqlite3.bind stmt 3 (Sqlite3.Data.FLOAT financial_record.tax));
+  ignore (Sqlite3.bind stmt 2 (Sqlite3.Data.FLOAT financial_record.avg_rev));
+  ignore (Sqlite3.bind stmt 3 (Sqlite3.Data.FLOAT financial_record.avg_tax));
   match Sqlite3.step stmt with
   | Sqlite3.Rc.DONE -> 
       ignore (Sqlite3.finalize stmt);
