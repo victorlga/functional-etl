@@ -52,6 +52,7 @@ type order_total = {
 (** Represents a financial record for a period *)
 type financial_record = {
   period : string; (** Time period (typically YYYY-MM) *)
-  revenue : float; (** Total revenue for the period *)
-  tax : float;     (** Total tax collected for the period *)
+  avg_rev : float; (** Average revenue by item for the period *)
+  avg_tax : float; (** Average tax by item collected for the period *)
+  quantity : int;  (** Total quantity of items for the period *)
 }
