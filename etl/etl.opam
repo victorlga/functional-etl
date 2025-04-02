@@ -3,13 +3,12 @@ opam-version: "2.0"
 synopsis: "An ETL pipeline implemented in OCaml"
 description:
   "A robust Extract, Transform, Load (ETL) pipeline written in OCaml, designed to process order data from CSV files, transform it based on user-specified criteria, and load results into CSV and SQLite formats."
-maintainer: ["Victor Assis <victor@example.com>"]
-authors: ["Victor Assis <victor@example.com>"]
+authors: ["Victor Assis <victorluisgassis@gmail.com>"]
 license: "MIT"
 tags: ["etl" "ocaml" "data-processing" "csv" "sqlite"]
-homepage: "https://github.com/victorlga/etl-ocaml"
+homepage: "https://github.com/victorlga/functional-etl"
 doc: "https://victorlga.github.io/etl-ocaml"
-bug-reports: "https://github.com/victorlga/etl-ocaml/issues"
+bug-reports: "https://github.com/victorlga/functional-etl/issues"
 depends: [
   "ocaml"
   "dune" {>= "3.17"}
@@ -33,4 +32,4 @@ build: [
     "@doc" {with-doc}
   ]
 ]
-dev-repo: "git+https://github.com/victorlga/etl-ocaml.git"
+dev-repo: "git+https://github.com/victorlga/functional-etl.git"
