@@ -120,4 +120,9 @@ To learn how to build from scratch the Functional-ETL project follow [this guide
    dune exec etl
    ```
 
+4. Test the ETL pipeline:
+   ```bash
+   dune test
+   ```
+
 
